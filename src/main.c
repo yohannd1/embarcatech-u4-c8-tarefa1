@@ -32,6 +32,7 @@
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
 
+// possíveis estilos para a borda do display
 enum display_style_t {
 	DISPLAY_STYLE_RECT,
 	DISPLAY_STYLE_COOL,
@@ -152,7 +153,6 @@ static bool main_loop(struct repeating_timer *_) {
 		ssd1306_fill(&display, 0);
 		break;
 	}
-
 
 	uint16_t x_mid = DISPLAY_WIDTH / 2 + get_axis_normalized(x_axis) * 15;
 	uint16_t y_mid = DISPLAY_HEIGHT / 2 - get_axis_normalized(y_axis) * 15;
