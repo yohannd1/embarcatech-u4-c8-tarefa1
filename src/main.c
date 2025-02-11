@@ -8,6 +8,9 @@
 
 #include "ssd1306.h"
 
+#define BUTTON_A_PIN 5
+#define BUTTON_J_PIN 22
+
 #define JOYSTICK_X_PIN 27
 #define JOYSTICK_X_INPUT 1
 
@@ -17,32 +20,52 @@
 #define JOYSTICK_CORRECTION -0.1 // evitar flicker na luz quando o joystick não está sendo usado
 #define JOYSTICK_WRAP 4096
 
-#define LED_B_PIN 12
 #define LED_R_PIN 13
+#define LED_G_PIN 11
+#define LED_B_PIN 12
+
+#define DEBOUNCING_TIME_US 10000
 
 static volatile uint pwm_b_slice;
 static volatile uint pwm_r_slice;
 static volatile bool led_use_pwm = true;
+static volatile bool led_green_on = false;
 
 static bool main_loop(struct repeating_timer *_);
 static uint setup_pwm_for(uint pin);
-static float calc_duty_cycle(uint16_t axis_value, float correction);
+static float calc_duty_cycle(uint16_t axis_value);
+static void on_press(uint gpio, uint32_t events);
 
 int main(void) {
 	stdio_init_all();
 
+	gpio_init(LED_R_PIN);
+	gpio_set_dir(LED_R_PIN, GPIO_OUT);
+
+	gpio_init(LED_G_PIN);
+	gpio_set_dir(LED_G_PIN, GPIO_OUT);
+	gpio_put(LED_G_PIN, led_green_on);
+
 	gpio_init(LED_B_PIN);
 	gpio_set_dir(LED_B_PIN, GPIO_OUT);
 
-	gpio_init(LED_R_PIN);
-	gpio_set_dir(LED_R_PIN, GPIO_OUT);
+	pwm_r_slice = setup_pwm_for(LED_R_PIN);
+	pwm_b_slice = setup_pwm_for(LED_B_PIN);
 
 	adc_init();
 	adc_gpio_init(JOYSTICK_X_PIN);
 	adc_gpio_init(JOYSTICK_Y_PIN);
 
-	pwm_b_slice = setup_pwm_for(LED_B_PIN);
-	pwm_r_slice = setup_pwm_for(LED_R_PIN);
+	gpio_init(BUTTON_A_PIN);
+	gpio_set_dir(BUTTON_A_PIN, GPIO_IN);
+	gpio_pull_up(BUTTON_A_PIN);
+
+	gpio_init(BUTTON_J_PIN);
+	gpio_set_dir(BUTTON_J_PIN, GPIO_IN);
+	gpio_pull_up(BUTTON_J_PIN);
+
+	gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &on_press);
+	gpio_set_irq_enabled_with_callback(BUTTON_J_PIN, GPIO_IRQ_EDGE_FALL, true, &on_press);
 
 	// 30fps: 1s/30f = ~33ms/f
 	struct repeating_timer timer;
@@ -73,6 +96,31 @@ static bool main_loop(struct repeating_timer *_) {
 	}
 
 	return true;
+}
+
+static void on_press(uint gpio, uint32_t events) {
+	static volatile uint32_t last_time_a = 0;
+	static volatile uint32_t last_time_j = 0;
+    uint32_t current_time = to_us_since_boot(get_absolute_time());
+
+	if (gpio == BUTTON_A_PIN) {
+		if (current_time - last_time_a > DEBOUNCING_TIME_US) {
+			bool button_a_pressed = !gpio_get(BUTTON_A_PIN);
+			if (button_a_pressed) {
+				led_green_on = !led_green_on;
+				gpio_put(LED_G_PIN, led_green_on);
+			}
+			last_time_a = current_time;
+		}
+	} else if (gpio == BUTTON_J_PIN) {
+		if (current_time - last_time_j > DEBOUNCING_TIME_US) {
+			bool button_j_pressed = !gpio_get(BUTTON_J_PIN);
+			if (button_j_pressed) {
+				led_use_pwm = !led_use_pwm;
+			}
+			last_time_j = current_time;
+		}
+	}
 }
 
 static float calc_duty_cycle(uint16_t axis_value) {
