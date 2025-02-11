@@ -165,7 +165,7 @@ static bool main_loop(struct repeating_timer *_) {
 static void on_press(uint gpio, uint32_t events) {
 	static volatile uint32_t last_time_a = 0;
 	static volatile uint32_t last_time_j = 0;
-    uint32_t current_time = to_us_since_boot(get_absolute_time());
+	uint32_t current_time = to_us_since_boot(get_absolute_time());
 
 	if (gpio == BUTTON_A_PIN) {
 		if (current_time - last_time_a > DEBOUNCING_TIME_US) {
