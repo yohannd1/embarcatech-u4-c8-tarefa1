@@ -19,11 +19,11 @@ interação:
 - Manipular o eixo Y do joystick para controlar o brilho do LED azul
     central;
 
-- Apertar o botão do joystick para ativar/desativar o brilho dos LEDs
-    azul e vermelho (invalidando as instruções anteriores);
+- Apertar o botão do joystick para ativar/desativar o LED verde, e
+    trocar o estilo da borda no display OLED;
 
-- Apertar o botão A para ativar/desativar o LED verde, e trocar o estilo
-    da borda no display OLED;
+- Apertar o botão A para ativar/desativar o brilho dos LEDs
+    azul e vermelho (invalidando as instruções anteriores);
 
 Durante isso, também há um retângulo visível no display OLED,
 centralizado no meio e variando de acordo com a posição do joystick.

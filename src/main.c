@@ -171,10 +171,7 @@ static void on_press(uint gpio, uint32_t events) {
 		if (current_time - last_time_a > DEBOUNCING_TIME_US) {
 			bool button_a_pressed = !gpio_get(BUTTON_A_PIN);
 			if (button_a_pressed) {
-				led_green_on = !led_green_on;
-				gpio_put(LED_G_PIN, led_green_on);
-
-				display_style = (display_style + 1) % DISPLAY_STYLE_MAX;
+				led_use_pwm = !led_use_pwm;
 			}
 			last_time_a = current_time;
 		}
@@ -182,7 +179,10 @@ static void on_press(uint gpio, uint32_t events) {
 		if (current_time - last_time_j > DEBOUNCING_TIME_US) {
 			bool button_j_pressed = !gpio_get(BUTTON_J_PIN);
 			if (button_j_pressed) {
-				led_use_pwm = !led_use_pwm;
+				led_green_on = !led_green_on;
+				gpio_put(LED_G_PIN, led_green_on);
+
+				display_style = (display_style + 1) % DISPLAY_STYLE_MAX;
 			}
 			last_time_j = current_time;
 		}
